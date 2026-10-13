@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "description": "Development-only offline visualization bundling; never required by student lessons",
+  "scripts": {"build": "node build.cjs"},
+  "dependencies": {"d3": "7.9.0", "esbuild": "0.25.12", "katex": "0.19.0"}
+}

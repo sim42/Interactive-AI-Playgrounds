@@ -1,0 +1,13 @@
+.DS_Store
+._*
+node_modules/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.log
+coverage/
+playwright-report/
+test-results/
+/生成式人工智能导论_教学大纲草稿.docx
+/outputs/

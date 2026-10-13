@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>机器学习 · 一步一步看计算</title>
+    <link rel="stylesheet" href="./vendor/katex/katex.min.css" />
+    <link rel="stylesheet" href="./styles/main.css" />
+    <script defer src="./vendor/d3.v7.9.0.min.js"></script>
+    <script defer src="./vendor/katex/katex.min.js"></script>
+    <script defer src="./scripts/model.js"></script>
+    <script defer src="./scripts/calculation.js"></script>
+    <script defer src="./scripts/plot.js"></script>
+    <script defer src="./scripts/view.js"></script>
+    <script defer src="./scripts/app.js"></script>
+  <link rel="stylesheet" href="./styles/studio.css">
+<script defer src="./scripts/knowledge.js"></script>
+<script defer src="./scripts/studio.js"></script>
+</head>
+  <body>
+    <noscript
+      >此实验需要启用JavaScript进行实际计算。无需联网或安装，启用后重新打开本地index.html。</noscript
+    >
+    <header class="page-head">
+      <p class="eyebrow">AI 实验台 · 从数据到判断</p>
+      <h1>算法用了哪些数，改变了哪些数？</h1>
+      <p class="subtitle">
+        先预测边界如何改变，再单步核对。同一个样本在数据图与运算图中同步出现；也可以移动一个训练点再验证。
+      </p>
+    </header>
+    <main>
+      <div class="lab">
+        <aside class="controls" aria-label="选择实验条件">
+          <h2>1 · 选择实验</h2>
+          <div class="field">
+            <label for="algorithm">算法</label
+            ><select id="algorithm">
+              <option value="svm">线性支持向量机（SVM）</option>
+              <option value="knn">k 近邻（kNN）</option>
+              <option value="kmeans">k-means 聚类</option>
+            </select>
+          </div>
+          <p id="algorithm-help" class="algorithm-help"></p>
+          <div class="field">
+            <label for="dataset"
+              >数据例子 <span>种子 <b id="seed-label">42</b></span></label
+            ><select id="dataset">
+              <option value="separable">两团：容易用直线分开</option>
+              <option value="xor">XOR：同类位于对角</option>
+              <option value="overlap">重叠：邻近也可能异类</option>
+            </select>
+            <p class="help" id="dataset-note"></p>
+          </div>
+          <div id="svm-fields" class="algorithm-fields">
+            <label for="eta">学习率 η <span>0.005–0.5</span></label>
+            <div class="paired">
+              <input
+                id="eta-range"
+                type="range"
+                min="0.005"
+                max="0.5"
+                step="0.005"
+                value="0.08"
+                aria-label="学习率滑块"
+              /><input
+                id="eta"
+                type="number"
+                min="0.005"
+                max="0.5"
+                step="0.005"
+                value="0.08"
+              />
+            </div>
+            <p class="help">
+              参数沿反向次梯度移动多远。越大可能更快，也可能振荡。
+            </p>
+          </div>
+          <div id="knn-fields" class="algorithm-fields" hidden>
+            <label for="k">邻居数 k <span>1–15，奇数</span></label>
+            <div class="paired">
+              <input
+                id="k-range"
+                type="range"
+                min="1"
+                max="15"
+                step="2"
+                value="5"
+                aria-label="邻居数滑块"
+              /><input
+                id="k"
+                type="number"
+                min="1"
+                max="15"
+                step="2"
+                value="5"
+              />
+            </div>
+            <p class="help">
+              最近k个训练点每点一票。多邻居能平滑，也可能纳入另一类的远点。
+            </p>
+          </div>
+          <div id="kmeans-fields" class="algorithm-fields" hidden>
+            <label for="clusters">中心数 <span>2–5</span></label>
+            <div class="paired">
+              <input
+                id="clusters-range"
+                type="range"
+                min="2"
+                max="5"
+                step="1"
+                value="2"
+                aria-label="中心数滑块"
+              /><input
+                id="clusters"
+                type="number"
+                min="2"
+                max="5"
+                step="1"
+                value="2"
+              />
+            </div>
+            <p class="help">中心数由你指定，算法根据距离分组，不看标签。</p>
+          </div>
+          <details class="advanced">
+            <summary>更多参数与查询位置</summary>
+            <div class="field" id="lambda-field">
+              <label for="lambda">权重正则 λ（0–1）</label
+              ><input
+                id="lambda"
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.04"
+              />
+              <p class="help">
+                越大越惩罚大权重；这项不惩罚偏置b。与hinge数据项相加形成次梯度。
+              </p>
+            </div>
+            <div id="query-fields" hidden>
+              <div class="query-inputs">
+                <div>
+                  <label for="query-x">查询 x₁</label
+                  ><input
+                    id="query-x"
+                    type="number"
+                    min="-2.5"
+                    max="2.5"
+                    step="0.05"
+                    value="0.15"
+                  />
+                </div>
+                <div>
+                  <label for="query-y">查询 x₂</label
+                  ><input
+                    id="query-y"
+                    type="number"
+                    min="-2.5"
+                    max="2.5"
+                    step="0.05"
+                    value="0.15"
+                  />
+                </div>
+              </div>
+              <p class="help">
+                −2.5到2.5，也可点击数据图；待预测点不参与训练。
+              </p>
+            </div>
+            <div class="field">
+              <label for="seed">种子（1–999999整数）</label
+              ><input
+                id="seed"
+                type="number"
+                min="1"
+                max="999999"
+                step="1"
+                value="42"
+              />
+              <p class="help">同种子重现同一组合成数据，图形重绘不会换数据。</p>
+            </div>
+            <div class="field">
+              <label for="interval">每动作停留时间（ms）</label
+              ><input
+                id="interval"
+                type="number"
+                min="80"
+                max="1800"
+                step="10"
+                value="650"
+              />
+              <p class="help">80–1800，只改变观看速度，不改变更新量。</p>
+            </div>
+          </details>
+          <div class="reset-actions">
+            <button id="restart">重新开始</button
+            ><button id="reset">重置实验</button
+            ><button id="new-data">换一组数据</button>
+          </div>
+          <p class="help">重新开始保留条件；重置恢复默认；换数据使种子+1。</p>
+        </aside>
+        <section class="experiment" aria-label="真实计算过程">
+          <div class="board-title">
+            <div>
+              <h2 id="plot-title"></h2>
+              <p id="nature" class="nature"></p>
+            </div>
+            <span id="status" class="status">尚未运行</span>
+          </div>
+          <div class="playback">
+            <button id="step" class="primary">下一步计算</button
+            ><button id="play">播放计算</button
+            ><button id="round">计算一轮</button
+            ><span id="stage-counter"></span>
+          </div>
+          <p
+            id="control-feedback"
+            class="feedback"
+            role="status"
+            aria-live="polite"
+          >
+            尚未开始。先预测结果，再推进计算。
+          </p>
+          <div class="metrics">
+            <div>
+              <span id="primary-label"></span
+              ><strong id="primary-value"></strong>
+            </div>
+            <div>
+              <span id="secondary-label"></span
+              ><strong id="secondary-value"></strong>
+            </div>
+            <div>
+              <span>实际进度</span><strong id="progress-value"></strong>
+            </div>
+          </div>
+          <ol id="phase-track" class="phase-track" aria-label="实际计算阶段"></ol>
+          <div class="workspace">
+          <section class="data-board" aria-label="可操纵的数据平面">
+          <div class="data-heading"><h3>数据与模型</h3><span id="edit-count">24个训练点 · 12个验证点</span></div>
+          <div class="plot-wrap">
+            <svg id="plot" role="img" aria-label="可选择和拖动的训练样本、验证点、分类边界或聚类中心"></svg>
+          </div>
+          <div id="legend" class="legend"></div>
+          <p class="plot-instruction">拖动实心训练点可改变条件；点击选择后也可用下面表单修改。黑环是当前计算点，紫虚环是编辑点。</p>
+          <details id="sample-editor" class="sample-editor">
+            <summary>检查或修改一个训练点</summary>
+            <div class="sample-form"><div><label for="sample-id">训练点</label><select id="sample-id"></select></div><div><label for="sample-x">x₁（−2.5–2.5）</label><input id="sample-x" type="number" min="-2.5" max="2.5" step="0.05"></div><div><label for="sample-y">x₂（−2.5–2.5）</label><input id="sample-y" type="number" min="-2.5" max="2.5" step="0.05"></div><div><label for="sample-label">标签</label><select id="sample-label"><option value="1">A（+1）</option><option value="-1">B（−1）</option></select></div></div>
+            <div class="editor-actions"><button id="apply-sample">应用并重新计算</button><button id="discard-draft">撤销草稿</button><button id="restore-data">恢复生成数据</button></div><p class="help">训练点编辑保存在当前配置。验证点不改动；换例子、换种子或重置会清除编辑。聚类不读取标签。</p>
+          </details>
+          </section>
+          <section class="calculation">
+            <div class="trace-head">
+              <h2>这一步怎样算</h2><button id="math-expand" class="text-button" aria-expanded="false">展开运算区域</button>
+              <h3 id="trace-title"></h3>
+            </div>
+            <div id="step-equation" class="step-equation" aria-label="当前算法公式"></div>
+            <div id="math-diagram" class="math-diagram"></div>
+            <p id="math-summary" class="math-summary"></p>
+          </section>
+          </div>
+          <p id="observation" class="observation"></p>
+          <details class="trace-details">
+            <summary>数值记录与文字替代</summary>
+            <div id="trace-lines"></div>
+          </details>
+        </section>
+      </div>
+      <section class="learning">
+        <div>
+          <h2>3 · 根据证据解释</h2>
+          <p id="prompt"></p>
+          <details>
+            <summary>参考解释</summary>
+            <p id="answer"></p>
+          </details>
+        </div>
+        <details class="formula">
+          <summary>符号、公式和算法限制</summary>
+          <div id="formula-content"></div>
+          <p>
+            特征是样本的两个数；标签是已知类别；预测是算法输出。验证点不更新参数，用验证集调参后不称独立测试。所有数据为合成示例。
+          </p>
+        </details>
+      </section>
+      <details class="history">
+        <summary>目标变化与最近完成记录</summary>
+        <canvas
+          id="history-plot"
+          role="img"
+          aria-label="计算目标历史，下面的表给出同一份数值"
+        ></canvas>
+        <div class="table-scroll">
+          <table>
+            <caption id="history-caption">
+              最近8条记录
+            </caption>
+            <thead>
+              <tr>
+                <th id="history-x-label"></th>
+                <th id="history-y-label"></th>
+              </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+      </details>
+      <footer>
+        浏览器中实际计算 · 数据为原创合成示例 · 重新开始保留参数与种子
+      </footer>
+    </main>
+  </body>
+</html>
