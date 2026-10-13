@@ -28,6 +28,17 @@ fs.mkdirSync(out, { recursive: true });
     const go = async relative => {
       await page.goto(new URL(relative, base).href, { waitUntil: 'load', timeout: 30000 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      if (relative.startsWith('topics/')) {
+        await page.locator('.knowledge-open').click();
+        assert.equal(await page.locator('#knowledge-drawer').evaluate(d => d.open), true);
+        await page.getByRole('tab', { name: '数学关系' }).click();
+        assert.ok(await page.locator('#knowledge-panel-1 .katex').count() >= 3);
+        assert.equal(await page.locator('.katex-error').count(), 0);
+        await page.getByRole('tab', { name: '延伸阅读' }).click();
+        assert.ok(await page.locator('.knowledge-source').count() >= 3);
+        await page.keyboard.press('Escape');
+        assert.equal(await page.evaluate(() => document.activeElement.className), 'knowledge-open');
+      }
     };
     await go('');
     assert.equal(await page.locator('.lesson h2 a[href^="./topics/"]').count(), 5);

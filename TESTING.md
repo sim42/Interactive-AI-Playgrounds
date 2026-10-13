@@ -27,6 +27,14 @@
 
 将 COURSE_TOPICS_ROOT 明确指向这批新解压的“独立主题”，重新运行五主题全部浏览器脚本及知识手册脚本。Chrome155与Firefox157全部通过；断网新会话加载无HTTP(S)请求、无未捕获错误，所有本地资源完整。知识手册额外覆盖1366、1920、390px、200% CSS缩放、暂停不丢状态、阅读无延迟写回、关闭不自动播放、键盘循环与焦点恢复。此后的原始运行文件保持不变。
 
+## 2026-10-13 公开仓库与 ECS 发布核对
+
+公开仓库为 [sim42/Interactive-AI-Playgrounds](https://github.com/sim42/Interactive-AI-Playgrounds)，默认分支 main。GitHub API 确认 isPrivate=false；未登录请求可读取 README，远端树包含全部423个受版本管理文件。仓库含五个完整课件、本地依赖、源文件、教学说明、测试、设计记录和六个离线包；未上传根部参考大纲或与课件无关的本地 outputs 文件。
+
+在线入口为 [https://ftp.dtsci.cn/IntroductionToAI/](https://ftp.dtsci.cn/IntroductionToAI/)，部署到原有课程子目录。396个发布文件经过公开HTTPS逐个下载，字节数和SHA-256全部与本地一致（9,592,305字节，含六ZIP）。Chrome155、Firefox157新会话检查目录与五主题：核心计算/编辑/对照、真实MLP损失和反向、万有近似构造/回归，以及每页知识抽屉的本地公式、阅读入口、Esc与回焦点均通过。未捕获错误、失败响应和资源失败均为0。六个公开下载ZIP另行核对SHA-256一致。
+
+上一站点版本备份于 `/var/backups/ai-courseware/IntroductionToAI-20261013-130944`。本次仅替换课程目录，FTP其他文件保留，未修改nginx配置。发布后本段验收说明单独同步并核对其公开字节；已验收的课件、资源和ZIP不变。
+
 ---
 
 # 2026-10-10 成熟项目研究后改版验证
