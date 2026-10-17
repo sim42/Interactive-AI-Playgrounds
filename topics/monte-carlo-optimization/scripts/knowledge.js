@@ -1,8 +1,12 @@
 /* Original local explanations; external reading opens only on a user click. */
 window.PlaygroundKnowledge = {
-  "title": "随机探索如何找到更优解",
+  "title": "随机搜索与模拟退火",
   "question": "暂时走向高处，有时为什么反而能走出局部低谷？",
   "concepts": [
+    {
+      "title": "优化与积分回答不同问题",
+      "text": "本页寻找目标函数的较低位置，观察当前点、历史最好值与接受概率。蒙特卡洛积分则把样本贡献平均以估计总量，并观察估计误差；随机取点并不意味着两种任务相同。"
+    },
     {
       "title": "先把“探索”与“接受”分开",
       "text": "蒙特卡洛（Monte Carlo）方法利用随机采样。这里要观察四件事：候选点从哪里来、它有多高、是否被接受、历史最好是否更新。每一步都实际计算。",

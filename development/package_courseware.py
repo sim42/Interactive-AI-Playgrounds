@@ -8,6 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 TOPICS = (
     'machine-learning-algorithms', 'gradient-descent',
     'monte-carlo-optimization', 'mlp-playground', 'universal-approximation',
+    'random-number-generation', 'random-processes', 'monte-carlo-integration',
+    'curse-of-dimensionality', 'variance-reduction',
+    'event-driven-simulation', 'molecular-dynamics',
 )
 DIST = ROOT / 'dist'
 DIST.mkdir(exist_ok=True)
@@ -21,7 +24,7 @@ def files(topic):
 
 
 def add(archive, name, data):
-    info = zipfile.ZipInfo(name, (2026, 10, 13, 0, 0, 0))
+    info = zipfile.ZipInfo(name, (2026, 10, 16, 0, 0, 0))
     info.compress_type = zipfile.ZIP_DEFLATED
     info.external_attr = 0o100644 << 16
     archive.writestr(info, data)
@@ -35,7 +38,7 @@ for topic in TOPICS:
 # The offline entry keeps experiment links, and omits online ZIP download links.
 entry = (ROOT / 'index.html').read_text()
 entry = re.sub(r'<a\b[^>]*href="\./dist/[^"]+"[^>]*>.*?</a>', '', entry, flags=re.S)
-entry = entry.replace('五个独立交互实验。', '五个独立离线交互实验。')
+
 with zipfile.ZipFile(DIST / 'ai-interactive-courseware.zip', 'w') as archive:
     prefix = 'AI 交互课件/'
     add(archive, prefix + 'index.html', entry.encode())

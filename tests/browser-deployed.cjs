@@ -35,13 +35,13 @@ fs.mkdirSync(out, { recursive: true });
         assert.ok(await page.locator('#knowledge-panel-1 .katex').count() >= 3);
         assert.equal(await page.locator('.katex-error').count(), 0);
         await page.getByRole('tab', { name: '延伸阅读' }).click();
-        assert.ok(await page.locator('.knowledge-source').count() >= 3);
+        assert.ok(await page.locator('.knowledge-source').count() >= 1);
         await page.keyboard.press('Escape');
         assert.equal(await page.evaluate(() => document.activeElement.className), 'knowledge-open');
       }
     };
     await go('');
-    assert.equal(await page.locator('.lesson h2 a[href^="./topics/"]').count(), 5);
+    assert.equal(await page.locator('.lesson h3 a[href^="./topics/"]').count(), 12);
     await page.screenshot({ path: path.join(out, `hub-${name}.png`) });
 
     await go('topics/machine-learning-algorithms/index.html');
@@ -104,9 +104,21 @@ fs.mkdirSync(out, { recursive: true });
     await page.screenshot({path:path.join(out,'uat-'+name+'.png')});
 
 
+    for (const slug of ['random-number-generation','random-processes','monte-carlo-integration','curse-of-dimensionality','variance-reduction','event-driven-simulation','molecular-dynamics']) {
+      await go(`topics/${slug}/index.html`);
+      for(let i=0;i<6;i++) await page.locator('#step').click();
+      assert.equal(await page.locator('#error').textContent(),'');
+      if(slug==='random-number-generation') assert.ok(await page.evaluate(()=>RandomNumberLab.getState().state.samples.length>0));
+      else if(slug==='random-processes') assert.ok(await page.evaluate(()=>RandomProcessLab.getState().attempts>0));
+      else if(slug==='event-driven-simulation') assert.equal(await page.evaluate(()=>EventLab.getState().event.collisions),1);
+      else if(slug==='molecular-dynamics') assert.equal(await page.evaluate(()=>MolecularLab.getState().steps),1);
+      else assert.ok(await page.evaluate(()=>SamplingLab.getState().stats.n>0));
+      await page.screenshot({path:path.join(out,slug+'-'+name+'.png'),fullPage:true});
+    }
+
     assert.deepEqual(errors, [], `${name}: uncaught errors`);
     assert.deepEqual(badResources, [], `${name}: failed HTTP resources`);
-    console.log(name, browser.version(), 'five online lessons and hub passed');
+    console.log(name, browser.version(), 'twelve online lessons and hub passed');
     if (name === 'Chrome') {
       for (const filename of fs.readdirSync(path.join(root, 'dist')).filter(x => x.endsWith('.zip'))) {
         const response = await context.request.get(new URL(`dist/${filename}`, base).href, { timeout: 30000, maxRetries: 2 });

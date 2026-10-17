@@ -41,7 +41,8 @@ books = {
  s('Gradient descent, how neural networks learn','https://www.3blue1brown.com/lessons/gradient-descent','3Blue1Brown · 动画与图文 · 英文','从地形直觉进入高维参数优化，适合建立损失函数与梯度的联系。'),
  s('Why Momentum Really Works','https://distill.pub/2017/momentum/','Distill · 交互文章 · 英文','通过可操作的路径、曲率和动力学图像理解动量，适合做对照实验。'),
  s('Adam: A Method for Stochastic Optimization','https://arxiv.org/abs/1412.6980','原始论文 · 英文 · 进阶','核对 Adam 的矩估计、偏差修正和更新规则。先观察本页数值再阅读更容易。')]),
-'monte-carlo-optimization': dict(title='随机探索如何找到更优解', question='暂时走向高处，有时为什么反而能走出局部低谷？', concepts=[
+'monte-carlo-optimization': dict(title='随机搜索与模拟退火', question='暂时走向高处，有时为什么反而能走出局部低谷？', concepts=[
+ c('优化与积分回答不同问题','本页寻找目标函数的较低位置，观察当前点、历史最好值与接受概率。蒙特卡洛积分则把样本贡献平均以估计总量，并观察估计误差；随机取点并不意味着两种任务相同。'),
  c('先把“探索”与“接受”分开','蒙特卡洛（Monte Carlo）方法利用随机采样。这里要观察四件事：候选点从哪里来、它有多高、是否被接受、历史最好是否更新。每一步都实际计算。','单步时同时看当前点、候选点和历史最优点。它们什么时候重合，什么时候不同？'),
  c('随机搜索：把预算花在全局','在给定方形范围内均匀抽取候选点，保留见过的最好值。它不读取梯度，也不会因为当前点在某个谷底就停止探索。有限次采样不能保证找出全局最低点。'),
  c('随机爬山：只接受改进','在当前点附近提出候选，只接受更低目标值。步长影响探索范围；步长小可能困在局部谷地，步长大也可能跳过狭窄的好区域。'),
@@ -100,4 +101,11 @@ for name, book in books.items():
     if './styles/studio.css' not in html:
         html = html.replace('</head>', '<link rel="stylesheet" href="./styles/studio.css">\n<script defer src="./scripts/knowledge.js"></script>\n<script defer src="./scripts/studio.js"></script>\n</head>')
         (topic / 'index.html').write_text(html)
-print('Built five offline field guides and copied common shell assets.')
+# New lessons own their original knowledge.js; keep their content and sync only the shell.
+for topic in (ROOT / 'topics').iterdir():
+    if topic.name in books or not (topic / 'scripts' / 'knowledge.js').exists():
+        continue
+    for file in ('studio.js', 'studio.css'):
+        target = 'scripts' if file.endswith('.js') else 'styles'
+        shutil.copy2(ROOT / 'development' / 'studio' / file, topic / target / file)
+print('Built existing field guides and synced the shell for all local guides.')
